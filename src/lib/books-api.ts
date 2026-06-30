@@ -177,22 +177,55 @@ async function searchByOpenLibrary(isbn: string): Promise<BookInfo | null> {
 }
 
 /**
- * Busca un libro por ISBN en todas las APIs disponibles
- * Primero intenta Open Library (más confiable), luego Google Books como fallback
+ * Busca un libro por ISBN llamando a AMBAS APIs y combinando la información
+ * Google Books suele tener mejor descripción y portadas
+ * Open Library suele tener mejor información de encuadernación y physical_format
  */
 export async function searchBookByISBN(isbn: string): Promise<BookInfo | null> {
   // Limpiar ISBN (quitar guiones y espacios)
   const cleanIsbn = isbn.replace(/[-\s]/g, '');
 
-  // Intentar Open Library primero (no necesita API key)
-  const openLibraryResult = await searchByOpenLibrary(cleanIsbn);
-  if (openLibraryResult) {
-    return openLibraryResult;
+  // Llamar a ambas APIs en paralelo
+  const [googleResult, openLibraryResult] = await Promise.all([
+    searchByGoogleBooks(cleanIsbn),
+    searchByOpenLibrary(cleanIsbn),
+  ]);
+
+  // Si ninguna encontró nada
+  if (!googleResult && !openLibraryResult) {
+    return null;
   }
 
-  // Fallback a Google Books
-  const googleResult = await searchByGoogleBooks(cleanIsbn);
-  return googleResult;
+  // Combinar resultados: preferir datos no vacíos de cada fuente
+  const base = googleResult || openLibraryResult!;
+  const extra = openLibraryResult || googleResult!;
+
+  return {
+    // Título: preferir Google (generalmente más completo)
+    title: base.title || extra.title,
+    // Autor: preferir Google
+    author: base.author || extra.author,
+    isbn: cleanIsbn,
+    // Descripción: preferir Google (generalmente más larga)
+    description: base.description || extra.description || undefined,
+    // Portada: preferir Google (mejor calidad)
+    coverUrl: base.coverUrl || extra.coverUrl || undefined,
+    // Páginas: preferir Open Library (generalmente más preciso)
+    pageCount: extra.pageCount || base.pageCount || undefined,
+    // Editorial: preferir Google
+    publisher: base.publisher || extra.publisher || undefined,
+    // Fecha: preferir Open Library (año de primera publicación)
+    publishedDate: base.publishedDate || extra.publishedDate || undefined,
+    // Idioma: preferir Open Library (ya mapeado a nombre)
+    language: base.language || extra.language || undefined,
+    // Encuadernación: solo Open Library tiene esta info
+    binding: extra.binding || base.binding || undefined,
+    // Dimensiones: solo Google Books tiene esta info
+    dimensions: base.dimensions || extra.dimensions || undefined,
+    // Saga: solo Google Books tiene esta info
+    series: base.series || extra.series || undefined,
+    seriesNumber: base.seriesNumber || extra.seriesNumber || undefined,
+  };
 }
 
 /**

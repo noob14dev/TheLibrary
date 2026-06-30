@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { getStatusLabel, getStatusColor, getRatingStars } from '@/lib/utils';
+import { getStatusLabel, getStatusColor } from '@/lib/utils';
 import { Pencil, Trash2, BookOpen, Calendar, Globe, Hash } from 'lucide-react';
 
 interface BookPageProps {
@@ -32,7 +32,6 @@ export default async function BookPage({ params }: BookPageProps) {
     where: { id },
     include: {
       userBook: true,
-      review: true,
       genres: {
         include: {
           genre: true,
@@ -118,9 +117,6 @@ export default async function BookPage({ params }: BookPageProps) {
             <Badge className={getStatusColor(book.userBook?.status || 'pending')}>
               {getStatusLabel(book.userBook?.status || 'pending')}
             </Badge>
-            {book.review?.rating && (
-              <Badge variant="secondary">{getRatingStars(book.review.rating)}</Badge>
-            )}
           </div>
 
           <Separator />
@@ -199,17 +195,6 @@ export default async function BookPage({ params }: BookPageProps) {
               <div>
                 <h3 className="mb-2 font-semibold">Descripción</h3>
                 <p className="text-muted-foreground whitespace-pre-wrap">{book.description}</p>
-              </div>
-            </>
-          )}
-
-          {/* Reseña personal */}
-          {book.review?.content && (
-            <>
-              <Separator />
-              <div>
-                <h3 className="mb-2 font-semibold">Mi Reseña</h3>
-                <p className="text-muted-foreground whitespace-pre-wrap">{book.review.content}</p>
               </div>
             </>
           )}

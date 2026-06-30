@@ -25,7 +25,6 @@ export default async function EditBookPage({ params }: EditBookPageProps) {
     where: { id },
     include: {
       userBook: true,
-      review: true,
       genres: {
         include: {
           genre: true,
@@ -54,9 +53,7 @@ export default async function EditBookPage({ params }: EditBookPageProps) {
     publisher: book.publisher || '',
     publishedDate: book.publishedDate || '',
     language: book.language || '',
-    status: (book.userBook?.status || 'pending') as 'pending' | 'reading' | 'finished',
-    rating: book.review?.rating?.toString() || '',
-    review: book.review?.content || '',
+    status: (book.userBook?.status || 'pending') as 'pending' | 'reading',
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     genreIds: book.genres.map((bg: any) => bg.genre.id),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

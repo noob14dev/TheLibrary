@@ -71,7 +71,6 @@ export function getStatusLabel(status: string): string {
   const labels: Record<string, string> = {
     pending: 'Pendiente',
     reading: 'Leyendo',
-    finished: 'Terminado',
   };
   return labels[status] || status;
 }
@@ -83,16 +82,6 @@ export function getStatusColor(status: string): string {
   const colors: Record<string, string> = {
     pending: 'bg-gray-100 text-gray-800',
     reading: 'bg-blue-100 text-blue-800',
-    finished: 'bg-green-100 text-green-800',
   };
   return colors[status] || 'bg-gray-100 text-gray-800';
-}
-
-/**
- * Genera estrellas de calificación
- */
-export function getRatingStars(rating: number | null): string {
-  if (rating === null) return 'Sin calificación';
-  const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
-  return stars;
 }

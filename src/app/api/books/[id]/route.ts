@@ -13,7 +13,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       include: {
         userBook: true,
-        review: true,
         genres: {
           include: {
             genre: {
@@ -71,10 +70,6 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       startedAt: book.userBook?.startedAt,
       finishedAt: book.userBook?.finishedAt,
       lastReadAt: book.userBook?.lastReadAt,
-
-      // Reseña
-      rating: book.review?.rating || null,
-      review: book.review?.content || null,
 
       // Géneros
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -179,26 +174,9 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
             },
           },
         }),
-
-        // Actualizar reseña
-        ...(body.rating !== undefined && {
-          review: {
-            upsert: {
-              create: {
-                rating: body.rating,
-                content: body.review,
-              },
-              update: {
-                rating: body.rating,
-                content: body.review,
-              },
-            },
-          },
-        }),
       },
       include: {
         userBook: true,
-        review: true,
         genres: {
           include: { genre: true },
         },
@@ -249,7 +227,6 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       where: { id },
       include: {
         userBook: true,
-        review: true,
         genres: {
           include: { genre: true },
         },

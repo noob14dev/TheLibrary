@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { getStatusLabel, getStatusColor, getRatingStars } from '@/lib/utils';
+import { getStatusLabel, getStatusColor } from '@/lib/utils';
 
 interface BookCardProps {
   book: {
@@ -13,7 +13,6 @@ interface BookCardProps {
     author: string | null;
     coverUrl: string | null;
     status: string;
-    rating: number | null;
     genres: Array<{ id: string; name: string }>;
   };
 }
@@ -65,13 +64,6 @@ export function BookCard({ book }: BookCardProps) {
 
             {book.author && (
               <p className="text-muted-foreground line-clamp-1 text-sm">{book.author}</p>
-            )}
-
-            {/* Calificación */}
-            {book.rating && (
-              <div className="flex items-center gap-1 text-sm">
-                <span className="text-yellow-500">{getRatingStars(book.rating)}</span>
-              </div>
             )}
 
             {/* Géneros */}

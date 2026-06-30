@@ -60,11 +60,6 @@ export async function GET(request: NextRequest) {
               currentPage: true,
             },
           },
-          review: {
-            select: {
-              rating: true,
-            },
-          },
           genres: {
             include: {
               genre: {
@@ -107,7 +102,6 @@ export async function GET(request: NextRequest) {
       pageCount: book.pageCount,
       status: book.userBook?.status || 'pending',
       progress: book.userBook?.progress || 0,
-      rating: book.review?.rating || null,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       genres: book.genres.map((bg: any) => ({
         id: bg.genre.id,
@@ -196,16 +190,6 @@ export async function POST(request: NextRequest) {
           },
         },
 
-        // Crear Review si se proporciona calificación
-        ...(body.rating && {
-          review: {
-            create: {
-              rating: body.rating,
-              content: body.review || null,
-            },
-          },
-        }),
-
         // Conectar géneros existentes
         ...(body.genreIds &&
           body.genreIds.length > 0 && {
@@ -228,7 +212,6 @@ export async function POST(request: NextRequest) {
       },
       include: {
         userBook: true,
-        review: true,
         genres: {
           include: { genre: true },
         },

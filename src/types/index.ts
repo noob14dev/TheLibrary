@@ -3,7 +3,7 @@
 // ===========================================
 
 // Estados de lectura
-export type ReadingStatus = 'pending' | 'reading' | 'finished';
+export type ReadingStatus = 'pending' | 'reading';
 
 // Información del libro desde APIs externas
 export interface BookInfo {
@@ -81,12 +81,10 @@ export interface LibraryStats {
   booksByStatus: {
     pending: number;
     reading: number;
-    finished: number;
   };
   booksByGenre: Array<{
     genre: string;
     count: number;
   }>;
-  averageRating: number;
   totalPagesRead: number;
 }

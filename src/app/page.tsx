@@ -18,11 +18,6 @@ export default async function HomePage() {
           status: true,
         },
       },
-      review: {
-        select: {
-          rating: true,
-        },
-      },
       genres: {
         include: {
           genre: {
@@ -49,10 +44,6 @@ export default async function HomePage() {
     where: { status: 'reading' },
   });
 
-  const finishedCount = await prisma.userBook.count({
-    where: { status: 'finished' },
-  });
-
   const pendingCount = await prisma.userBook.count({
     where: { status: 'pending' },
   });
@@ -74,7 +65,7 @@ export default async function HomePage() {
       </div>
 
       {/* Estadísticas */}
-      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+      <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-3">
         <div className="bg-card rounded-lg border p-4 text-center shadow-sm">
           <div className="text-2xl font-bold">{stats._count}</div>
           <div className="text-muted-foreground text-sm">Total libros</div>
@@ -82,10 +73,6 @@ export default async function HomePage() {
         <div className="bg-card rounded-lg border p-4 text-center shadow-sm">
           <div className="text-2xl font-bold text-blue-600">{readingCount}</div>
           <div className="text-muted-foreground text-sm">Leyendo</div>
-        </div>
-        <div className="bg-card rounded-lg border p-4 text-center shadow-sm">
-          <div className="text-2xl font-bold text-green-600">{finishedCount}</div>
-          <div className="text-muted-foreground text-sm">Terminados</div>
         </div>
         <div className="bg-card rounded-lg border p-4 text-center shadow-sm">
           <div className="text-2xl font-bold text-gray-600">{pendingCount}</div>
@@ -116,7 +103,6 @@ export default async function HomePage() {
               author: book.author,
               coverUrl: book.coverUrl,
               status: book.userBook?.status || 'pending',
-              rating: book.review?.rating || null,
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               genres: book.genres.map((bg: any) => ({
                 id: bg.genre.id,

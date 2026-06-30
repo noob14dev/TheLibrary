@@ -16,7 +16,6 @@ import {
 } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, X, Loader2 } from 'lucide-react';
-import type { ReadingStatus } from '@/types';
 
 interface Genre {
   id: string;
@@ -43,9 +42,7 @@ interface BookFormData {
   dimensions: string;
   series: string;
   seriesNumber: string;
-  status: ReadingStatus;
-  rating: string;
-  review: string;
+  status: string;
   genreIds: string[];
   shelfIds: string[];
 }
@@ -56,7 +53,6 @@ interface BookFormProps {
   isEditing?: boolean;
 }
 
-// Lista de idiomas comunes
 const LANGUAGES = [
   { code: 'es', name: 'Español' },
   { code: 'en', name: 'Inglés' },
@@ -117,48 +113,37 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
     dimensions: initialData?.dimensions || '',
     series: initialData?.series || '',
     seriesNumber: initialData?.seriesNumber || '',
-    status: (initialData?.status as ReadingStatus) || 'pending',
-    rating: initialData?.rating || '',
-    review: initialData?.review || '',
+    status: initialData?.status || 'pending',
     genreIds: initialData?.genreIds || [],
     shelfIds: initialData?.shelfIds || [],
   });
 
-  // Cargar géneros y estanterías
   useEffect(() => {
     async function loadData() {
       const [genresRes, shelvesRes] = await Promise.all([
         fetch('/api/genres'),
         fetch('/api/shelves'),
       ]);
-
       const genresData = await genresRes.json();
       const shelvesData = await shelvesRes.json();
-
       setGenres(genresData.genres || []);
       setShelves(shelvesData.shelves || []);
     }
-
     loadData();
   }, []);
 
-  // Buscar libro por ISBN
   async function handleSearchISBN() {
     if (!formData.isbn) return;
-
     setIsSearching(true);
     try {
       const response = await fetch(`/api/search?isbn=${formData.isbn}`);
       const data = await response.json();
-
       if (data.found && data.book) {
-        // Mapear nombre de idioma a código
         const langName = data.book.language;
         const langCode =
           LANGUAGES.find((l) => l.name.toLowerCase() === langName?.toLowerCase())?.code ||
           langName ||
           '';
-
         setFormData((prev) => ({
           ...prev,
           title: data.book.title || prev.title,
@@ -182,33 +167,26 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
     }
   }
 
-  // Enviar formulario
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setIsLoading(true);
-
     try {
       const payload = {
         ...formData,
         pageCount: formData.pageCount ? parseInt(formData.pageCount) : null,
         seriesNumber: formData.seriesNumber ? parseInt(formData.seriesNumber) : null,
-        rating: formData.rating ? parseInt(formData.rating) : null,
       };
-
       const url = isEditing ? `/api/books/${bookId}` : '/api/books';
       const method = isEditing ? 'PUT' : 'POST';
-
       const response = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.error?.message || 'Error al guardar el libro');
       }
-
       const book = await response.json();
       router.push(`/books/${book.id}`);
       router.refresh();
@@ -220,7 +198,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
     }
   }
 
-  // Toggle género
   function toggleGenre(genreId: string) {
     setFormData((prev) => ({
       ...prev,
@@ -230,7 +207,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
     }));
   }
 
-  // Toggle estantería
   function toggleShelf(shelfId: string) {
     setFormData((prev) => ({
       ...prev,
@@ -287,7 +263,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="author">Autor</Label>
               <Input
@@ -304,12 +279,7 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
               id="description"
               rows={3}
               value={formData.description}
-              onChange={(e) =>
-                setFormData((prev) => ({
-                  ...prev,
-                  description: e.target.value,
-                }))
-              }
+              onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
             />
           </div>
 
@@ -324,7 +294,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 onChange={(e) => setFormData((prev) => ({ ...prev, pageCount: e.target.value }))}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="publisher">Editorial</Label>
               <Input
@@ -333,17 +302,13 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 onChange={(e) => setFormData((prev) => ({ ...prev, publisher: e.target.value }))}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="publishedDate">Año de publicación</Label>
               <Input
                 id="publishedDate"
                 value={formData.publishedDate}
                 onChange={(e) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    publishedDate: e.target.value,
-                  }))
+                  setFormData((prev) => ({ ...prev, publishedDate: e.target.value }))
                 }
               />
             </div>
@@ -370,7 +335,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="coverUrl">URL de portada</Label>
               <Input
@@ -417,7 +381,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 </SelectContent>
               </Select>
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="dimensions">Dimensiones</Label>
               <Input
@@ -428,7 +391,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
               />
             </div>
           </div>
-
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="series">Saga / Colección</Label>
@@ -439,7 +401,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 onChange={(e) => setFormData((prev) => ({ ...prev, series: e.target.value }))}
               />
             </div>
-
             <div className="space-y-2">
               <Label htmlFor="seriesNumber">Número en la saga</Label>
               <Input
@@ -460,59 +421,23 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
         <CardHeader>
           <CardTitle className="text-lg">Estado de Lectura</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Estado</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData((prev) => ({
-                    ...prev,
-                    status: value as ReadingStatus,
-                  }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Pendiente</SelectItem>
-                  <SelectItem value="reading">Leyendo</SelectItem>
-                  <SelectItem value="finished">Terminado</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Calificación</Label>
-              <Select
-                value={formData.rating}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, rating: value ?? '' }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Sin calificar" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1">⭐ 1 - Mala</SelectItem>
-                  <SelectItem value="2">⭐⭐ 2 - Regular</SelectItem>
-                  <SelectItem value="3">⭐⭐⭐ 3 - Buena</SelectItem>
-                  <SelectItem value="4">⭐⭐⭐⭐ 4 - Muy buena</SelectItem>
-                  <SelectItem value="5">⭐⭐⭐⭐⭐ 5 - Excelente</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
+        <CardContent>
           <div className="space-y-2">
-            <Label htmlFor="review">Reseña personal</Label>
-            <Textarea
-              id="review"
-              rows={3}
-              placeholder="Tus opiniones sobre el libro..."
-              value={formData.review}
-              onChange={(e) => setFormData((prev) => ({ ...prev, review: e.target.value }))}
-            />
+            <Label>Estado</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value) =>
+                value && setFormData((prev) => ({ ...prev, status: value }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="pending">📚 Pendiente</SelectItem>
+                <SelectItem value="reading">📖 Leyendo</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
@@ -578,7 +503,7 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
         </CardContent>
       </Card>
 
-      {/* Botones de acción */}
+      {/* Botones */}
       <div className="flex gap-4">
         <Button type="submit" disabled={isLoading}>
           {isLoading ? (
@@ -592,7 +517,6 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
             'Agregar Libro'
           )}
         </Button>
-
         <Button type="button" variant="outline" onClick={() => router.back()}>
           Cancelar
         </Button>
