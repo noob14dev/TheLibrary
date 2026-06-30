@@ -38,6 +38,17 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.0.0/).
   - AGENTS.md con instrucciones para agentes de código
   - docs/arquitectura.md con diseño del sistema
   - docs/api-reference.md con documentación de endpoints
+- **Fase 1: CRUD de Libros**
+  - API Routes para libros (GET/POST/PUT/DELETE)
+  - API Route para búsqueda por ISBN
+  - API Routes para géneros y estanterías
+  - Página principal con lista de libros
+  - Página de detalle del libro
+  - Página de creación de libros
+  - Página de edición de libros
+  - Componente BookCard para mostrar libros
+  - Componente BookForm con búsqueda por ISBN
+  - Integración con shadcn/ui
   - .env.example con variables de entorno documentadas
 
 ### Changed

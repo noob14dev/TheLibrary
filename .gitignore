@@ -48,3 +48,4 @@ prisma/dev.db-journal
 # uploads
 public/covers/*
 !public/covers/.gitkeep
+CLAUDE.md

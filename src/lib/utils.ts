@@ -1,16 +1,13 @@
-// ===========================================
-// TheLibrary - Utilidades Generales
-// ===========================================
+import { clsx, type ClassValue } from 'clsx';
+import { twMerge } from 'tailwind-merge';
 
-import { type ClassValue, clsx } from 'clsx';
-
-/**
- * Combina clases de Tailwind CSS de forma condicional
- * (Requiere: npm install clsx)
- */
 export function cn(...inputs: ClassValue[]) {
-  return clsx(inputs);
+  return twMerge(clsx(inputs));
 }
+
+// ===========================================
+// Funciones de utilidad para la biblioteca
+// ===========================================
 
 /**
  * Formatea una fecha a formato legible
@@ -59,7 +56,6 @@ export function getGenreColor(genre: string): string {
     'bg-teal-100 text-teal-800',
   ];
 
-  // Hash simple del nombre del género
   let hash = 0;
   for (let i = 0; i < genre.length; i++) {
     hash = genre.charCodeAt(i) + ((hash << 5) - hash);
