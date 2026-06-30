@@ -29,7 +29,7 @@ TheLibrary es una aplicación web para gestionar tu biblioteca personal de libro
 
 ```bash
 # Clonar el repositorio
-git clone https://github.com/tu-usuario/the-library.git
+git clone https://github.com/noob14dev/TheLibrary.git
 cd the-library
 
 # Instalar dependencias
