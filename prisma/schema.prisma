@@ -1,0 +1,144 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ========================================
+// MODELOS PRINCIPALES
+// ========================================
+
+model Book {
+  id            String    @id @default(cuid())
+  title         String
+  author        String?
+  isbn          String?   @unique
+  description   String?
+  coverUrl      String?   // URL de portada (Google Books, Open Library)
+  coverPath     String?   // Portada subida manualmente
+  pageCount     Int?
+  publisher     String?
+  publishedDate String?
+  language      String?   // Código ISO (es, en, etc.)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relaciones
+  genres        BookGenre[]
+  shelves       ShelfBook[]
+  userBook      UserBook?
+  review        Review?
+  readingSessions ReadingSession[]
+
+  @@index([author])
+  @@index([title])
+}
+
+// ========================================
+// GÉNEROS
+// ========================================
+
+model Genre {
+  id    String      @id @default(cuid())
+  name  String      @unique
+  books BookGenre[]
+
+  @@index([name])
+}
+
+// ========================================
+// ESTANTERÍAS (Colecciones personalizadas)
+// ========================================
+
+model Shelf {
+  id        String      @id @default(cuid())
+  name      String      @unique
+  icon      String?     // emoji o código de icono
+  sortOrder Int         @default(0)
+  books     ShelfBook[]
+
+  @@index([name])
+}
+
+// ========================================
+// TABLAS DE RELACIÓN (Many-to-Many)
+// ========================================
+
+model ShelfBook {
+  id        String   @id @default(cuid())
+  shelfId   String
+  bookId    String
+  addedAt   DateTime @default(now())
+  sortOrder Int      @default(0)
+  shelf     Shelf    @relation(fields: [shelfId], references: [id], onDelete: Cascade)
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@unique([shelfId, bookId])
+  @@index([shelfId])
+  @@index([bookId])
+}
+
+model BookGenre {
+  bookId  String
+  genreId String
+  book    Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  genre   Genre  @relation(fields: [genreId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, genreId])
+  @@index([bookId])
+  @@index([genreId])
+}
+
+// ========================================
+// ESTADO DE LECTURA
+// ========================================
+
+model UserBook {
+  id          String    @id @default(cuid())
+  bookId      String    @unique
+  status      String    @default("pending") // pending, reading, finished
+  progress    Int       @default(0)         // 0-100%
+  currentPage Int       @default(0)
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  lastReadAt  DateTime?
+  book        Book      @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+}
+
+// ========================================
+// RESEÑAS Y CALIFICACIONES
+// ========================================
+
+model Review {
+  id        String   @id @default(cuid())
+  bookId    String   @unique
+  rating    Int?     // 1-5
+  content   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([rating])
+}
+
+// ========================================
+// SESIONES DE LECTURA (Historial)
+// ========================================
+
+model ReadingSession {
+  id        String   @id @default(cuid())
+  bookId    String
+  pagesRead Int
+  duration  Int?     // minutos
+  date      DateTime @default(now())
+  notes     String?
+  book      Book     @relation(fields: [bookId], references: [id], onDelete: Cascade)
+
+  @@index([bookId])
+  @@index([date])
+}

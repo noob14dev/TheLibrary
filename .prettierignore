@@ -1,0 +1,9 @@
+node_modules
+.next
+build
+dist
+out
+public/**/*.svg
+package-lock.json
+prisma/migrations
+src/generated
