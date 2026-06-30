@@ -182,6 +182,10 @@ export async function POST(request: NextRequest) {
         publisher: body.publisher || null,
         publishedDate: body.publishedDate || null,
         language: body.language || null,
+        binding: body.binding || null,
+        dimensions: body.dimensions || null,
+        series: body.series || null,
+        seriesNumber: body.seriesNumber || null,
 
         // Crear registro de UserBook (estado de lectura)
         userBook: {

@@ -39,6 +39,10 @@ interface BookFormData {
   publisher: string;
   publishedDate: string;
   language: string;
+  binding: string;
+  dimensions: string;
+  series: string;
+  seriesNumber: string;
   status: ReadingStatus;
   rating: string;
   review: string;
@@ -51,6 +55,46 @@ interface BookFormProps {
   bookId?: string;
   isEditing?: boolean;
 }
+
+// Lista de idiomas comunes
+const LANGUAGES = [
+  { code: 'es', name: 'Español' },
+  { code: 'en', name: 'Inglés' },
+  { code: 'fr', name: 'Francés' },
+  { code: 'de', name: 'Alemán' },
+  { code: 'it', name: 'Italiano' },
+  { code: 'pt', name: 'Portugués' },
+  { code: 'nl', name: 'Neerlandés' },
+  { code: 'ru', name: 'Ruso' },
+  { code: 'ja', name: 'Japonés' },
+  { code: 'zh', name: 'Chino' },
+  { code: 'ar', name: 'Árabe' },
+  { code: 'he', name: 'Hebreo' },
+  { code: 'sv', name: 'Sueco' },
+  { code: 'no', name: 'Noruego' },
+  { code: 'da', name: 'Danés' },
+  { code: 'fi', name: 'Finlandés' },
+  { code: 'pl', name: 'Polaco' },
+  { code: 'cs', name: 'Checo' },
+  { code: 'hu', name: 'Húngaro' },
+  { code: 'tr', name: 'Turco' },
+  { code: 'vi', name: 'Vietnamita' },
+  { code: 'th', name: 'Tailandés' },
+  { code: 'ko', name: 'Coreano' },
+  { code: 'id', name: 'Indonesio' },
+  { code: 'ms', name: 'Malayo' },
+  { code: 'uk', name: 'Ucraniano' },
+  { code: 'ro', name: 'Rumano' },
+  { code: 'bg', name: 'Búlgaro' },
+  { code: 'hr', name: 'Croata' },
+  { code: 'sl', name: 'Esloveno' },
+  { code: 'lt', name: 'Lituano' },
+  { code: 'lv', name: 'Letón' },
+  { code: 'et', name: 'Estonio' },
+  { code: 'ca', name: 'Catalán' },
+  { code: 'gl', name: 'Gallego' },
+  { code: 'eu', name: 'Vasco' },
+];
 
 export function BookForm({ initialData, bookId, isEditing = false }: BookFormProps) {
   const router = useRouter();
@@ -69,6 +113,10 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
     publisher: initialData?.publisher || '',
     publishedDate: initialData?.publishedDate || '',
     language: initialData?.language || '',
+    binding: initialData?.binding || '',
+    dimensions: initialData?.dimensions || '',
+    series: initialData?.series || '',
+    seriesNumber: initialData?.seriesNumber || '',
     status: (initialData?.status as ReadingStatus) || 'pending',
     rating: initialData?.rating || '',
     review: initialData?.review || '',
@@ -104,6 +152,13 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
       const data = await response.json();
 
       if (data.found && data.book) {
+        // Mapear nombre de idioma a código
+        const langName = data.book.language;
+        const langCode =
+          LANGUAGES.find((l) => l.name.toLowerCase() === langName?.toLowerCase())?.code ||
+          langName ||
+          '';
+
         setFormData((prev) => ({
           ...prev,
           title: data.book.title || prev.title,
@@ -113,7 +168,11 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
           pageCount: data.book.pageCount?.toString() || prev.pageCount,
           publisher: data.book.publisher || prev.publisher,
           publishedDate: data.book.publishedDate || prev.publishedDate,
-          language: data.book.language || prev.language,
+          language: langCode || prev.language,
+          binding: data.book.binding || prev.binding,
+          dimensions: data.book.dimensions || prev.dimensions,
+          series: data.book.series || prev.series,
+          seriesNumber: data.book.seriesNumber?.toString() || prev.seriesNumber,
         }));
       }
     } catch (error) {
@@ -132,6 +191,7 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
       const payload = {
         ...formData,
         pageCount: formData.pageCount ? parseInt(formData.pageCount) : null,
+        seriesNumber: formData.seriesNumber ? parseInt(formData.seriesNumber) : null,
         rating: formData.rating ? parseInt(formData.rating) : null,
       };
 
@@ -292,12 +352,23 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="language">Idioma</Label>
-              <Input
-                id="language"
-                placeholder="ej: es, en"
+              <Select
                 value={formData.language}
-                onChange={(e) => setFormData((prev) => ({ ...prev, language: e.target.value }))}
-              />
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, language: value ?? '' }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar idioma" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LANGUAGES.map((lang) => (
+                    <SelectItem key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -307,6 +378,77 @@ export function BookForm({ initialData, bookId, isEditing = false }: BookFormPro
                 type="url"
                 value={formData.coverUrl}
                 onChange={(e) => setFormData((prev) => ({ ...prev, coverUrl: e.target.value }))}
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Detalles adicionales */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Detalles Adicionales</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="binding">Encuadernación</Label>
+              <Select
+                value={formData.binding}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, binding: value ?? '' }))
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Seleccionar tipo" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Tapa dura">Tapa dura</SelectItem>
+                  <SelectItem value="Tapa blanda">Tapa blanda</SelectItem>
+                  <SelectItem value="Tapa blanda (mercado masivo)">
+                    Tapa blanda (mercado masivo)
+                  </SelectItem>
+                  <SelectItem value="Libro de cartón">Libro de cartón</SelectItem>
+                  <SelectItem value="Espiral">Espiral</SelectItem>
+                  <SelectItem value="Cuero">Cuero</SelectItem>
+                  <SelectItem value="Tela">Tela</SelectItem>
+                  <SelectItem value="eBook">eBook</SelectItem>
+                  <SelectItem value="Audiolibro">Audiolibro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dimensions">Dimensiones</Label>
+              <Input
+                id="dimensions"
+                placeholder="ej: 23 x 15 x 2 cm"
+                value={formData.dimensions}
+                onChange={(e) => setFormData((prev) => ({ ...prev, dimensions: e.target.value }))}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="series">Saga / Colección</Label>
+              <Input
+                id="series"
+                placeholder="Nombre de la saga"
+                value={formData.series}
+                onChange={(e) => setFormData((prev) => ({ ...prev, series: e.target.value }))}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="seriesNumber">Número en la saga</Label>
+              <Input
+                id="seriesNumber"
+                type="number"
+                min="0"
+                placeholder="ej: 1"
+                value={formData.seriesNumber}
+                onChange={(e) => setFormData((prev) => ({ ...prev, seriesNumber: e.target.value }))}
               />
             </div>
           </div>

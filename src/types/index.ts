@@ -16,6 +16,11 @@ export interface BookInfo {
   publisher?: string;
   publishedDate?: string;
   language?: string;
+  // Campos extras
+  binding?: string; // Encuadernación (tapa dura, blanda, etc.)
+  dimensions?: string; // Dimensiones
+  series?: string; // Saga/colección
+  seriesNumber?: number; // Número en la saga
 }
 
 // Respuesta de Google Books API
@@ -38,6 +43,18 @@ export interface GoogleBooksResponse {
       publisher?: string;
       publishedDate?: string;
       language?: string;
+      dimensions?: {
+        height?: string;
+        width?: string;
+        thickness?: string;
+      };
+      seriesInfo?: {
+        bookDisplayNumber?: number;
+        volumeSeriesElement?: {
+          seriesName?: string;
+          seriesNumber?: number;
+        };
+      };
     };
   }>;
 }
@@ -53,6 +70,8 @@ export interface OpenLibraryResponse {
     publisher?: string[];
     first_publish_year?: number;
     language?: string[];
+    physical_format?: string; // Encuadernación
+    edition_key?: string[];
   }>;
 }
 

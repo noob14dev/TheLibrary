@@ -22,7 +22,11 @@ model Book {
   pageCount     Int?
   publisher     String?
   publishedDate String?
-  language      String?   // Código ISO (es, en, etc.)
+  language      String?   // Nombre del idioma (Español, Inglés, etc.)
+  binding       String?   // Encuadernación (Tapa dura, Tapa blanda, etc.)
+  dimensions    String?   // Dimensiones
+  series        String?   // Saga/colección
+  seriesNumber  Int?      // Número en la saga
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

@@ -161,6 +161,10 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
         publisher: body.publisher,
         publishedDate: body.publishedDate,
         language: body.language,
+        binding: body.binding,
+        dimensions: body.dimensions,
+        series: body.series,
+        seriesNumber: body.seriesNumber,
 
         // Actualizar estado de lectura
         ...(body.status !== undefined && {

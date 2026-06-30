@@ -16,7 +16,8 @@ async function searchByGoogleBooks(isbn: string): Promise<BookInfo | null> {
     const response = await fetch(`${GOOGLE_BOOKS_API}?q=isbn:${isbn}&maxResults=1`);
 
     if (!response.ok) {
-      throw new Error('Error en Google Books API');
+      console.warn(`Google Books API respondió con status ${response.status}`);
+      return null;
     }
 
     const data: GoogleBooksResponse = await response.json();
@@ -27,19 +28,46 @@ async function searchByGoogleBooks(isbn: string): Promise<BookInfo | null> {
 
     const book = data.items[0].volumeInfo;
 
+    // Construir URL de portada (quitar http:// para usar https)
+    let coverUrl = book.imageLinks?.thumbnail;
+    if (coverUrl) {
+      coverUrl = coverUrl.replace('http://', 'https://');
+    }
+
+    // Extraer información de dimensiones
+    let dimensions: string | undefined;
+    if (book.dimensions) {
+      const parts: string[] = [];
+      if (book.dimensions.height) parts.push(`Alt: ${book.dimensions.height}`);
+      if (book.dimensions.width) parts.push(`Ancho: ${book.dimensions.width}`);
+      if (book.dimensions.thickness) parts.push(`Grosor: ${book.dimensions.thickness}`);
+      if (parts.length > 0) dimensions = parts.join(' x ');
+    }
+
+    // Extraer información de saga
+    let series: string | undefined;
+    let seriesNumber: number | undefined;
+    if (book.seriesInfo) {
+      series = book.seriesInfo.volumeSeriesElement?.seriesName;
+      seriesNumber = book.seriesInfo.volumeSeriesElement?.seriesNumber;
+    }
+
     return {
       title: book.title,
       author: book.authors?.join(', ') || 'Desconocido',
       isbn,
       description: book.description,
-      coverUrl: book.imageLinks?.thumbnail,
+      coverUrl,
       pageCount: book.pageCount,
       publisher: book.publisher,
       publishedDate: book.publishedDate,
       language: book.language,
+      dimensions,
+      series,
+      seriesNumber,
     };
   } catch (error) {
-    console.error('Error buscando en Google Books:', error);
+    console.warn('Error buscando en Google Books:', error);
     return null;
   }
 }
@@ -56,7 +84,8 @@ async function searchByOpenLibrary(isbn: string): Promise<BookInfo | null> {
     });
 
     if (!response.ok) {
-      throw new Error('Error en Open Library API');
+      console.warn(`Open Library API respondió con status ${response.status}`);
+      return null;
     }
 
     const data: OpenLibraryResponse = await response.json();
@@ -70,6 +99,66 @@ async function searchByOpenLibrary(isbn: string): Promise<BookInfo | null> {
     // Construir URL de portada
     const coverUrl = book.cover_i ? `${OPEN_LIBRARY_COVERS}/${isbn}-L.jpg` : undefined;
 
+    // Mapear formato físico a encuadernación legible
+    const bindingMap: Record<string, string> = {
+      hardcover: 'Tapa dura',
+      paperback: 'Tapa blanda',
+      trade: 'Tapa blanda',
+      mass_market: 'Tapa blanda (mercado masivo)',
+      board_book: 'Libro de cartón',
+      spiral: 'Espiral',
+      leather: 'Cuero',
+      cloth: 'Tela',
+    };
+
+    const binding = book.physical_format
+      ? bindingMap[book.physical_format] || book.physical_format
+      : undefined;
+
+    // Mapear código de idioma a nombre
+    const languageMap: Record<string, string> = {
+      eng: 'Inglés',
+      spa: 'Español',
+      fre: 'Francés',
+      ger: 'Alemán',
+      ita: 'Italiano',
+      por: 'Portugués',
+      dut: 'Neerlandés',
+      rus: 'Ruso',
+      jpn: 'Japonés',
+      chi: 'Chino',
+      ara: 'Árabe',
+      heb: 'Hebreo',
+      swe: 'Sueco',
+      nor: 'Noruego',
+      dan: 'Danés',
+      fin: 'Finlandés',
+      pol: 'Polaco',
+      cze: 'Checo',
+      hun: 'Húngaro',
+      tur: 'Turco',
+      vie: 'Vietnamita',
+      tha: 'Tailandés',
+      kor: 'Coreano',
+      ind: 'Indonesio',
+      msu: 'Malayo',
+      ukr: 'Ucraniano',
+      ron: 'Rumano',
+      bul: 'Búlgaro',
+      hrv: 'Croata',
+      slv: 'Esloveno',
+      lit: 'Lituano',
+      lav: 'Letón',
+      est: 'Estonio',
+      cat: 'Catalán',
+      glc: 'Gallego',
+      eus: 'Vasco',
+      unknown: 'Desconocido',
+    };
+
+    const languageCode = book.language?.[0];
+    const language = languageCode ? languageMap[languageCode] || languageCode : undefined;
+
     return {
       title: book.title,
       author: book.author_name?.join(', ') || 'Desconocido',
@@ -78,31 +167,32 @@ async function searchByOpenLibrary(isbn: string): Promise<BookInfo | null> {
       pageCount: book.number_of_pages_median,
       publisher: book.publisher?.[0],
       publishedDate: book.first_publish_year?.toString(),
-      language: book.language?.[0],
+      language,
+      binding,
     };
   } catch (error) {
-    console.error('Error buscando en Open Library:', error);
+    console.warn('Error buscando en Open Library:', error);
     return null;
   }
 }
 
 /**
  * Busca un libro por ISBN en todas las APIs disponibles
- * Primero intenta Google Books, luego Open Library como fallback
+ * Primero intenta Open Library (más confiable), luego Google Books como fallback
  */
 export async function searchBookByISBN(isbn: string): Promise<BookInfo | null> {
   // Limpiar ISBN (quitar guiones y espacios)
   const cleanIsbn = isbn.replace(/[-\s]/g, '');
 
-  // Intentar Google Books primero
-  const googleResult = await searchByGoogleBooks(cleanIsbn);
-  if (googleResult) {
-    return googleResult;
+  // Intentar Open Library primero (no necesita API key)
+  const openLibraryResult = await searchByOpenLibrary(cleanIsbn);
+  if (openLibraryResult) {
+    return openLibraryResult;
   }
 
-  // Fallback a Open Library
-  const openLibraryResult = await searchByOpenLibrary(cleanIsbn);
-  return openLibraryResult;
+  // Fallback a Google Books
+  const googleResult = await searchByGoogleBooks(cleanIsbn);
+  return googleResult;
 }
 
 /**
