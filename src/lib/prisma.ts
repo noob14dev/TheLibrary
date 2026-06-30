@@ -1,10 +1,12 @@
 import { PrismaClient } from '@/generated/prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 
-// Prisma v7 requires explicit options, but for SQLite with prisma.config.ts
-// the datasource URL is configured via the config file
 const prismaClientSingleton = () => {
-  // @ts-expect-error - Prisma v7 SQLite doesn't require adapter but TypeScript insists on it
-  return new PrismaClient();
+  const adapter = new PrismaLibSql({
+    url: 'file:prisma/dev.db',
+  });
+
+  return new PrismaClient({ adapter });
 };
 
 declare const globalThis: {
